@@ -3,7 +3,8 @@ import librosa
 import random
 import numpy
 
-from aupyom import Sampler, Sound
+
+from aupyom import Sound
 from aupyom.util import example_audio_file
 
 

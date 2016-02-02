@@ -1,5 +1,4 @@
 import numpy
-import sounddevice
 
 from Queue import Queue
 from threading import Thread, Condition
@@ -12,9 +11,10 @@ class Sampler(object):
 
     """
 
-    def __init__(self, sr=22050):
+    def __init__(self, sr=22050, backend='sounddevice'):
         """
         :param int sr: samplerate used - all sounds added to the sampler will automatically be resampled if needed (- his can be a CPU consumming task, try to use sound with all identical sampling rate if possible.
+        :param str backend: backend used for playing sound. Can be either 'sounddevice' or 'dummy'.
 
         """
         self.sr = sr
@@ -22,6 +22,15 @@ class Sampler(object):
 
         self.chunks = Queue(1)
         self.chunk_available = Condition()
+
+        if backend == 'dummy':
+            from .dummy_stream import DummyStream
+            self.BackendStream = DummyStream
+        elif backend == 'sounddevice':
+            from sounddevice import OutputStream
+            self.BackendStream = OutputStream
+        else:
+            raise ValueError("Backend can either be 'sounddevice' or 'dummy'")
 
         # TODO: use a process instead?
         self.play_thread = Thread(target=self.run)
@@ -88,6 +97,6 @@ class Sampler(object):
         t = Thread(target=chunks_producer)
         t.start()
 
-        with sounddevice.OutputStream(samplerate=self.sr, channels=1) as stream:
+        with self.BackendStream(samplerate=self.sr, channels=1) as stream:
             while self.running:
                 stream.write(self.chunks.get())
