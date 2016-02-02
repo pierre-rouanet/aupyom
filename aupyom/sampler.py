@@ -25,6 +25,7 @@ class Sampler(object):
 
         # TODO: use a process instead?
         self.play_thread = Thread(target=self.run)
+        self.play_thread.daemon = True
         self.play_thread.start()
 
     def play(self, sound):
