@@ -9,7 +9,6 @@ from aupyom.util import example_audio_file
 
 class TestSoundLoading(unittest.TestCase):
     def setUp(self):
-        self.sampler = Sampler()
         self.audio_file = example_audio_file()
 
     def test_load_sound(self):
