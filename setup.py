@@ -24,7 +24,7 @@ setup(name='aupyom',
       setup_requires=['setuptools_git >= 0.3', ],
 
       exclude_package_data={'': ['README', '.gitignore']},
-      package_data={'': ['example_data/*']}
+      package_data={'': ['example_data/*']},
 
       author='Pierre Rouanet',
       author_email='pierre.rouanet@gmail.com',
@@ -36,6 +36,4 @@ setup(name='aupyom',
           "Programming Language :: Python :: 2",
           "Programming Language :: Python :: 3",
           "Topic :: Scientific/Engineering", ],
-
-      **extra
       )
