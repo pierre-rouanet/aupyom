@@ -72,13 +72,14 @@ class Sound(object):
                 def __iter__(iter):
                     return iter
 
-                def next(iter):
+                def __next__(iter):
                     chunk = self._next_chunk()
 
                     if len(chunk) != self.chunk_size:
                         raise StopIteration
 
                     return chunk
+                next = __next__
 
             self._it = ChunkIterator()
 
