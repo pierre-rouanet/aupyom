@@ -102,8 +102,8 @@ class Sound(object):
         N = len(freq)
         shifted_freq = numpy.zeros(N, freq.dtype)
 
-        S = shift if shift > 0 else N + shift
-        s = N - shift if shift > 0 else -shift
+        S = numpy.round(shift if shift > 0 else N + shift, 0)
+        s = numpy.round(N - shift if shift > 0 else -shift, 0)
 
         shifted_freq[:S] = freq[s:]
         shifted_freq[S:] = freq[:s]
