@@ -12,6 +12,7 @@ setup(name='aupyom',
       packages=find_packages(),
 
       install_requires=[
+            'future',
             'numpy',
             'librosa',
             'sounddevice',

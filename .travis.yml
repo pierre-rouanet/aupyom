@@ -1,0 +1,41 @@
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - ffmpeg
+
+cache:
+  directories:
+  - $HOME/env
+
+language: python
+
+python:
+    - "2.7"
+    - "3.4"
+    - "3.5"
+
+before_install:
+    - bash ./ci/travis_dependencies.sh
+    - export PATH="$HOME/env/miniconda$TRAVIS_PYTHON_VERSION/bin:$PATH";
+    - hash -r
+    - source activate test-environment
+
+install:
+    # install your own package into the environment
+    # pip install -e rather than setup.py, so that coverage can find the source
+    - pip install -e ./
+    # Download wav files as travis does not support git lfs
+    - bash ./ci/download_data.sh
+
+script:
+    - python --version
+    - nosetests --with-coverage --cover-erase --cover-package=aupyom -v -w tests/
+
+after_success:
+    - coveralls
+    - pip uninstall -y aupyom
+
+after_failure:
+    - pip uninstall -y aupyom
