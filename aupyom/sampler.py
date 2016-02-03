@@ -74,7 +74,7 @@ class Sampler(object):
                 chunks = []
                 for s in playing_sounds:
                     try:
-                        chunks.append(s.chunks.next())
+                        chunks.append(next(s.chunks))
                     except StopIteration:
                         s.playing = False
                         self.sounds.remove(s)
