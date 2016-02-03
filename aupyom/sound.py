@@ -69,24 +69,23 @@ class Sound(object):
         """ Returns a chunk iterator over the sound. """
         if not hasattr(self, '_it'):
             class ChunkIterator(object):
-                def __init__(iter):
-                    iter.i = 0
+                def __iter__(iter):
+                    return iter
 
                 def next(iter):
-                    chunk = self._next_chunk(iter.i)
+                    chunk = self._next_chunk()
 
                     if len(chunk) != self.chunk_size:
                         raise StopIteration
 
-                    iter.i += self.chunk_size
                     return chunk
 
             self._it = ChunkIterator()
 
         return self._it
 
-    def _next_chunk(self, i):
-        chunk = self._time_stretcher(i, self.stretch_factor)
+    def _next_chunk(self):
+        chunk = self._time_stretcher(self.stretch_factor)
 
         if numpy.round(self.pitch_shift, 1) != 0:
             chunk = self.pitch_shifter(chunk, self.pitch_shift)
@@ -141,7 +140,7 @@ class Sound(object):
         self._sf = value
         self._zero_padding()
 
-    def _time_stretcher(self, i, stretch_factor):
+    def _time_stretcher(self, stretch_factor):
         """ Real time time-scale without pitch modification.
 
             :param int i: index of the beginning of the chunk to stretch
@@ -151,7 +150,7 @@ class Sound(object):
 
         """
         start = self._i2
-        end = min(self._i2 + self._N, len(self.y) - (self._N + self._H))
+        end = min(self._i2 + self._N, len(self._sy) - (self._N + self._H))
 
         if start >= end:
             raise StopIteration
