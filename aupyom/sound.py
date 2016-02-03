@@ -15,6 +15,8 @@ class Sound(object):
         self.y, self.sr = y.astype(dtype='float32'), sr
         self.chunk_size = chunk_size
 
+        self.pitch_shift = 0
+
 
     def resample(self, target_sr):
         """ Returns a new sound with a samplerate of target_sr. """
@@ -71,4 +73,28 @@ class Sound(object):
         return self._it
 
     def _next_chunk(self, i):
-        return self.y[i: i + self.chunk_size]
+        chunk = self.y[i: i + self.chunk_size]
+
+        if numpy.round(self.pitch_shift, 1) != 0:
+            chunk = self.pitch_shifter(chunk, self.pitch_shift)
+
+        return chunk
+
+    # Effects
+
+    def pitch_shifter(self, chunk, shift):
+        """ Pitch-Shift the given chunk by shift semi-tones. """
+        freq = numpy.fft.rfft(chunk)
+
+        N = len(freq)
+        shifted_freq = numpy.zeros(N, freq.dtype)
+
+        S = shift if shift > 0 else N + shift
+        s = N - shift if shift > 0 else -shift
+
+        shifted_freq[:S] = freq[s:]
+        shifted_freq[S:] = freq[:s]
+
+        shifted_chunk = numpy.fft.irfft(shifted_freq)
+
+        return shifted_chunk.astype(chunk.dtype)
