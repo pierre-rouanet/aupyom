@@ -33,6 +33,15 @@ script:
     - python --version
     - nosetests --with-coverage --cover-erase --cover-package=aupyom -v -w tests/
 
+deploy:
+    provider: pypi
+    user: "pierre-rouanet"
+    # PYPI_PASSWD encrypted below > travis encrypt PYPI_PASSWD=XXXXXX --add
+    secure: "ovWnNtOxp9SzfayLkI/NbeQld76FatyUm7Bdj6d9XWxokQpj130pf5uBwrUs32TCDmWJxfIC/8Jn7IA4kMWLzH/hN+M6AIc290EiSmLNaNU4HOh6hdx6qERHLSoPFVHgI1xPTEUouNWXkP3LR8nFja/iK1ai4ecGUBoIrtG0TW4="
+    distributions: "sdist bdist_wheel"
+    on:
+        tags: true
+
 after_success:
     - coveralls
     - pip uninstall -y aupyom
