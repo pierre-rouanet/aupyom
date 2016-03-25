@@ -25,6 +25,8 @@ class Sound(object):
 
         self._init_stretching()
 
+        self.loop = False
+
         # Effect properties
         self.pitch_shift = 0
         self.stretch_factor = 1.0
@@ -32,7 +34,7 @@ class Sound(object):
     def resample(self, target_sr):
         """ Returns a new sound with a samplerate of target_sr. """
         y_hat = librosa.core.resample(self.y, self.sr, target_sr)
-        return Sound(y_hat, sr)
+        return Sound(y_hat, target_sr)
 
     # IO methods
 
@@ -58,9 +60,7 @@ class Sound(object):
     @playing.setter
     def playing(self, value):
         if value and hasattr(self, '_it'):
-            del self._it
-
-            self._init_stretching()
+            self._reset()
 
         self._playing = value
 
@@ -73,10 +73,14 @@ class Sound(object):
                     return iter
 
                 def __next__(iter):
-                    chunk = self._next_chunk()
+                    try:
+                        chunk = self._next_chunk()
+                    except StopIteration:
+                        if self.loop:
+                            self._init_stretching()
+                            return iter.__next__()
 
-                    if len(chunk) != self.chunk_size:
-                        raise StopIteration
+                        raise
 
                     return chunk
                 next = __next__
@@ -90,6 +94,9 @@ class Sound(object):
 
         if numpy.round(self.pitch_shift, 1) != 0:
             chunk = self.pitch_shifter(chunk, self.pitch_shift)
+
+        if len(chunk) != self.chunk_size:
+            raise StopIteration
 
         return chunk
 
@@ -111,6 +118,10 @@ class Sound(object):
         shifted_chunk = numpy.fft.irfft(shifted_freq)
 
         return shifted_chunk.astype(chunk.dtype)
+
+    def _reset(self):
+        del self._it
+        self._init_stretching()
 
     def _init_stretching(self):
         # Resp. index of current audio chunk and computed phase
