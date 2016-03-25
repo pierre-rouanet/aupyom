@@ -58,9 +58,7 @@ class Sound(object):
     @playing.setter
     def playing(self, value):
         if value and hasattr(self, '_it'):
-            del self._it
-
-            self._init_stretching()
+            self._reset()
 
         self._playing = value
 
@@ -111,6 +109,10 @@ class Sound(object):
         shifted_chunk = numpy.fft.irfft(shifted_freq)
 
         return shifted_chunk.astype(chunk.dtype)
+
+    def _reset(self):
+        del self._it
+        self._init_stretching()
 
     def _init_stretching(self):
         # Resp. index of current audio chunk and computed phase
