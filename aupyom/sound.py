@@ -16,6 +16,7 @@ class Sound(object):
         You also have access two properties:
             * pitch_shift (real time pitch shifting)
             * time_stretch (real time time-scale without pitch modification)
+            * volume (real time volume level)
 
         Both can be tweaked simultaneously.
 
@@ -30,6 +31,7 @@ class Sound(object):
         # Effect properties
         self.pitch_shift = 0
         self.stretch_factor = 1.0
+        self.volume = 1.0
 
     def resample(self, target_sr):
         """ Returns a new sound with a samplerate of target_sr. """
@@ -94,6 +96,7 @@ class Sound(object):
 
         if numpy.round(self.pitch_shift, 1) != 0:
             chunk = self.pitch_shifter(chunk, self.pitch_shift)
+        chunk *= self.volume
 
         if len(chunk) != self.chunk_size:
             raise StopIteration
