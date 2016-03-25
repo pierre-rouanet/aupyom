@@ -25,6 +25,8 @@ class Sound(object):
 
         self._init_stretching()
 
+        self.loop = False
+
         # Effect properties
         self.pitch_shift = 0
         self.stretch_factor = 1.0
@@ -71,10 +73,14 @@ class Sound(object):
                     return iter
 
                 def __next__(iter):
-                    chunk = self._next_chunk()
+                    try:
+                        chunk = self._next_chunk()
+                    except StopIteration:
+                        if self.loop:
+                            self._init_stretching()
+                            return iter.__next__()
 
-                    if len(chunk) != self.chunk_size:
-                        raise StopIteration
+                        raise
 
                     return chunk
                 next = __next__
@@ -88,6 +94,9 @@ class Sound(object):
 
         if numpy.round(self.pitch_shift, 1) != 0:
             chunk = self.pitch_shifter(chunk, self.pitch_shift)
+
+        if len(chunk) != self.chunk_size:
+            raise StopIteration
 
         return chunk
 
