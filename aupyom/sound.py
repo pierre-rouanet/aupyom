@@ -32,7 +32,7 @@ class Sound(object):
     def resample(self, target_sr):
         """ Returns a new sound with a samplerate of target_sr. """
         y_hat = librosa.core.resample(self.y, self.sr, target_sr)
-        return Sound(y_hat, sr)
+        return Sound(y_hat, target_sr)
 
     # IO methods
 
