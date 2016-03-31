@@ -192,4 +192,8 @@ class Sound(object):
             self._i2 += self._H
 
         chunk = self._sy[start:end]
+
+        if stretch_factor == 1.0:
+            chunk = self.y[start:end]
+
         return chunk
