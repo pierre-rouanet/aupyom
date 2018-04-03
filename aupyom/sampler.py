@@ -1,7 +1,7 @@
-import numpy
+from queue import Empty, Queue
+from threading import Condition, Event, Thread
 
-from queue import Queue
-from threading import Thread, Condition
+import numpy
 
 
 class Sampler(object):
@@ -11,7 +11,7 @@ class Sampler(object):
 
     """
 
-    def __init__(self, sr=22050, backend='sounddevice'):
+    def __init__(self, sr=22050, backend='sounddevice', timeout=1):
         """
         :param int sr: samplerate used - all sounds added to the sampler will automatically be resampled if needed (- his can be a CPU consumming task, try to use sound with all identical sampling rate if possible.
         :param str backend: backend used for playing sound. Can be either 'sounddevice' or 'dummy'.
@@ -22,6 +22,8 @@ class Sampler(object):
 
         self.chunks = Queue(1)
         self.chunk_available = Condition()
+        self.is_done = Event()  # new event to prevent play to be called again before the sound is actually played
+        self.timeout = timeout  # timeout value for graceful exit of the BackendStream
 
         if backend == 'dummy':
             from .dummy_stream import DummyStream
@@ -37,6 +39,12 @@ class Sampler(object):
         self.play_thread.daemon = True
         self.play_thread.start()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.play_thread.join()
+
     def play(self, sound):
         """ Adds and plays a new Sound to the Sampler.
 
@@ -45,6 +53,7 @@ class Sampler(object):
             .. note:: If the sound is already playing, it will restart from the beginning.
 
         """
+        self.is_done.clear()  # hold is_done until the sound is played
         if self.sr != sound.sr:
             raise ValueError('You can only play sound with a samplerate of {} (here {}). Use the Sound.resample method for instance.', self.sr, sound.sr)
 
@@ -56,6 +65,7 @@ class Sampler(object):
             sound.playing = True
 
             self.chunk_available.notify()
+        self.is_done.wait()  # wait for the sound to be entirely played
 
     def remove(self, sound):
         """ Remove a currently played sound. """
@@ -78,6 +88,7 @@ class Sampler(object):
                     except StopIteration:
                         s.playing = False
                         self.sounds.remove(s)
+                        self.is_done.set()  # sound was played, release is_done to end the wait in play
 
                 if chunks:
                     break
@@ -99,4 +110,7 @@ class Sampler(object):
 
         with self.BackendStream(samplerate=self.sr, channels=1) as stream:
             while self.running:
-                stream.write(self.chunks.get())
+                try:
+                    stream.write(self.chunks.get(timeout=self.timeout))  # timeout so stream.write() thread can exit
+                except Empty:
+                    self.running = False  # let play_thread exit
