@@ -34,10 +34,7 @@ class Sampler(object):
         else:
             raise ValueError("Backend can either be 'sounddevice' or 'dummy'")
 
-        # TODO: use a process instead?
-        self.play_thread = Thread(target=self.run)
-        self.play_thread.daemon = True
-        self.play_thread.start()
+        self.play_thread = None
 
     def __enter__(self):
         return self
@@ -45,7 +42,7 @@ class Sampler(object):
     def __exit__(self, *args):
         self.play_thread.join()
 
-    def play(self, sound):
+    def play(self, sound, wait=False):
         """ Adds and plays a new Sound to the Sampler.
 
             :param sound: sound to play
@@ -65,7 +62,14 @@ class Sampler(object):
             sound.playing = True
 
             self.chunk_available.notify()
-        self.is_done.wait()  # wait for the sound to be entirely played
+
+        if self.play_thread is None or not self.play_thread.is_alive():
+            self.play_thread = Thread(target=self.run)
+            self.play_thread.daemon = True
+            self.play_thread.start()
+
+        if wait:
+            self.is_done.wait()  # wait for the sound to be entirely played
 
     def remove(self, sound):
         """ Remove a currently played sound. """
